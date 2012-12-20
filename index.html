@@ -2,8 +2,22 @@
 <html>
 <head>
     <title>Nimbah</title>
+    <script type='text/javascript' src='knockout-2.2.0.debug.js'></script>
+    <script type='text/javascript' src='jquery-1.8.3.min.js'></script>
+    <script type='text/javascript' src='main.js'></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-
+    <div class="inputText">
+        <div class="watermark">Enter your input text here...</div>
+        <div class="textArea"><textarea data-bind="value: inputText, valueUpdate: 'afterkeydown', hasfocus: inputFocused, style: { opacity: inputOpacity }"></textarea></div>
+    </div>
+    <div class="outputText">
+        <div class="watermark">Output text will appear here...</div>
+        <div class="textArea"><textarea readonly="true" data-bind="value: outputText, hasfocus: outputFocused, style: { opacity: outputOpacity }"></textarea></div>
+    </div>
+    <div class="tree">
+        <div class="scrollableArea"><canvas data-bind="attr: { width: treeWidth, height: treeHeight }"></canvas></div>
+    </div>
 </body>
 </html>
