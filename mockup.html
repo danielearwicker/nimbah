@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Mockup</title>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            text-align: center;
+        }
+
+        .pipeline {
+            padding: 8px;
+        }
+
+        .pipeline > div {
+            text-align: center;
+            margin: 4px;
+        }
+
+        .operator {
+            border: 1px solid gray;
+            background: #eee;
+            border-radius: 4px;
+            box-shadow: 3px 3px 10px gray;
+            display: inline-block;
+        }
+
+        .operator .title {
+            background: #46c;
+            color: white;
+            border-bottom: 1px solid gray;
+            padding: 1px 6px;
+        }
+
+        .operator table td {
+            position: relative;
+        }
+
+        .operator input {
+            margin: 0;
+            max-width: 100px;
+        }
+
+        .dataNavigator {
+            background: #b5becc;
+            border-bottom: 1px solid gray;
+        }
+
+
+        .sequence > img {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<div class="pipeline">
+    <div class="input"><img src="img/in.png" alt="Input"></div>
+    <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+    <div class="operator">
+        <div class="title">Split</div>
+        <table>
+            <tr>
+                <td>Separator</td><td><input type="text" size="2"></td>
+            </tr>
+        </table>
+    </div>
+    <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+    <div class="operator">
+        <div class="title">Map</div>
+        <div class="dataNavigator">
+            <button>&lt;</button>
+            <span>1</span>
+            <button>&gt;</button>
+        </div>
+        <div class="pipeline">
+            <div class="input"><img src="img/in.png" alt="Input"></div>
+            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+            <div class="operator">
+                <div class="title">Split</div>
+                <table>
+                    <tr>
+                        <td>Separator</td><td><input type="text" size="2"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+            <div class="operator">
+                <div class="title">Map</div>
+                <div class="pipeline">
+                    <div class="input"><img src="img/in.png" alt="Input"></div>
+                    <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+                    <div class="operator">
+                        <div class="title">Sequence</div>
+                        <div class="sequence">
+                            <img src="img/comma.png" alt="Comma">
+                            <div class="sequenceItem">
+                                <div class="sequenceItemWrapper">
+                                    <div class="pipeline">
+                                        <div class="input"><img src="img/in.png" alt="Input"></div>
+                                        <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+                                        <div class="output"><img src="img/out.png" alt="Output"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <img src="img/comma.png" alt="Comma">
+                        </div>
+                    </div>
+                    <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+                    <div class="output"><img src="img/out.png" alt="Output"></div>
+                </div>
+            </div>
+            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+            <div class="operator">
+                <div class="title">Join</div>
+                <table>
+                    <tr>
+                        <td>Separator</td><td><input type="text" size="2"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+            <div class="output"><img src="img/out.png" alt="Output"></div>
+        </div>
+    </div>
+    <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+    <div class="operator">
+        <div class="title">Join</div>
+        <table>
+            <tr>
+                <td>Separator</td><td><input type="text" size="2"></td>
+            </tr>
+        </table>
+    </div>
+    <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+    <div class="output"><img src="img/out.png" alt="Output"></div>
+</div>
+
+</body>
+</html>
