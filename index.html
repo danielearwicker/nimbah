@@ -6,6 +6,73 @@
     <script type='text/javascript' src='jquery-1.8.3.min.js'></script>
     <script type='text/javascript' src='main.js'></script>
     <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script type="text/html" id="pipelineTemplate">
+        <div class="pipeline">
+            <!-- <div class="input"><img src="img/in.png" alt="Input"></div> -->
+            <!-- ko foreach: $data -->
+            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+            <div class="operator">
+                <div class="title">
+                    <span data-bind="text: name"></span>
+                    <span class="deleteButton">x</span>
+                </div>
+                <div class="content" data-bind="template: { name: function(ctx) { return ctx.name() + 'Template'; } }"></div>
+            </div>
+            <!-- /ko -->
+            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+            <!-- <div class="output"><img src="img/out.png" alt="Output"></div> -->
+        </div>
+    </script>
+
+    <script type="text/html" id="sequenceTemplate">
+        <table class="sequence">
+            <tr>
+                <!-- ko foreach: items -->
+                <td><img src="img/comma.png" alt="Comma"></td>
+                <td class="sequenceItem" data-bind="template: { name: 'pipelineTemplate' }"></td>
+                <!-- /ko -->
+                <td><img src="img/comma.png" alt="Comma"></td>
+            </tr>
+        </table>
+    </script>
+
+    <script type="text/html" id="settingsTemplate">
+        <table data-bind="foreach: settings">
+            <tr>
+                <td data-bind="text: name"></td>
+                <td><input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', style: { width: size + 'px' }, css: { invalidSetting: hasError }, attr: { title: errorMessage }"></td>
+            </tr>
+        </table>
+    </script>
+
+    <script type="text/html" id="splitTemplate">
+        <!-- ko template: { name: 'settingsTemplate' } --> <!-- /ko -->
+    </script>
+
+    <script type="text/html" id="joinTemplate">
+        <!-- ko template: { name: 'settingsTemplate' } --> <!-- /ko -->
+    </script>
+
+    <script type="text/html" id="stringTemplate">
+        <!-- ko template: { name: 'settingsTemplate' } --> <!-- /ko -->
+    </script>
+
+    <script type="text/html" id="pickTemplate">
+        <!-- ko template: { name: 'settingsTemplate' } --> <!-- /ko -->
+    </script>
+
+    <script type="text/html" id="mapTemplate">
+        <div class="dataNavigator">
+            <button data-bind="click: previous, enable: hasPrevious">&lt;</button>
+            <span data-bind="text: displayPosition"></span> of <span data-bind="text: length"></span>
+            <button data-bind="click: next, enable: hasNext">&gt;</button>
+        </div>
+        <div class="withEachItem">
+            <!-- ko template: { name: 'pipelineTemplate', data: withEachItem } --> <!-- /ko -->
+        </div>
+    </script>
+
 </head>
 <body>
     <div class="inputText">
@@ -16,8 +83,9 @@
         <div class="watermark">Output text will appear here...</div>
         <div class="textArea"><textarea readonly="true" data-bind="value: outputText, hasfocus: outputFocused, style: { opacity: outputOpacity }"></textarea></div>
     </div>
-    <div class="tree">
-        <div class="scrollableArea"><canvas data-bind="attr: { width: treeWidth, height: treeHeight }"></canvas></div>
+    <div class="tree" data-bind="template: { name: 'pipelineTemplate', data: pipeline }"></div>
+    <div class="palette" data-bind="foreach: operators">
+        <div class="item" data-bind="text: name"></div>
     </div>
 </body>
 </html>

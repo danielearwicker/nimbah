@@ -48,11 +48,17 @@
             border-bottom: 1px solid gray;
         }
 
+        .sequence {
+            margin: 4px;
+        }
 
-        .sequence > img {
-            vertical-align: middle;
+        .sequenceItem {
+            background: white;
+            border: 1px solid gray;
         }
     </style>
+
+
 </head>
 <body>
 
@@ -94,19 +100,27 @@
                     <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
                     <div class="operator">
                         <div class="title">Sequence</div>
-                        <div class="sequence">
-                            <img src="img/comma.png" alt="Comma">
-                            <div class="sequenceItem">
-                                <div class="sequenceItemWrapper">
+                        <table class="sequence">
+                            <tr>
+                                <td><img src="img/comma.png" alt="Comma"></td>
+                                <td class="sequenceItem">
                                     <div class="pipeline">
                                         <div class="input"><img src="img/in.png" alt="Input"></div>
                                         <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
                                         <div class="output"><img src="img/out.png" alt="Output"></div>
                                     </div>
-                                </div>
-                            </div>
-                            <img src="img/comma.png" alt="Comma">
-                        </div>
+                                </td>
+                                <td><img src="img/comma.png" alt="Comma"></td>
+                                <td class="sequenceItem">
+                                    <div class="pipeline">
+                                        <div class="input"><img src="img/in.png" alt="Input"></div>
+                                        <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
+                                        <div class="output"><img src="img/out.png" alt="Output"></div>
+                                    </div>
+                                </td>
+                                <td><img src="img/comma.png" alt="Comma"></td>
+                            </tr>
+                        </table>
                     </div>
                     <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
                     <div class="output"><img src="img/out.png" alt="Output"></div>
