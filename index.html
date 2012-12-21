@@ -2,26 +2,26 @@
 <html>
 <head>
     <title>Nimbah</title>
-    <script type='text/javascript' src='knockout-2.2.0.debug.js'></script>
-    <script type='text/javascript' src='jquery-1.8.3.min.js'></script>
+    <script type='text/javascript' src='lib/knockout-2.2.0.debug.js'></script>
+    <script type='text/javascript' src='lib/jquery-1.8.3.min.js'></script>
+    <script type='text/javascript' src='lib/jquery-ui-1.9.2.custom.js'></script>
+    <script type='text/javascript' src='bindings.js'></script>
     <script type='text/javascript' src='main.js'></script>
     <link rel="stylesheet" type="text/css" href="style.css">
 
     <script type="text/html" id="pipelineTemplate">
         <div class="pipeline">
-            <!-- <div class="input"><img src="img/in.png" alt="Input"></div> -->
-            <!-- ko foreach: $data -->
-            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
-            <div class="operator">
-                <div class="title">
-                    <span data-bind="text: name"></span>
-                    <span class="deleteButton">x</span>
+            <!-- ko foreach: operators -->
+            <div class="pipe" data-bind="drop: dropped"><img src="img/pipe.png" alt="Pipe"></div>
+            <div class="operator" data-bind="hovering: hovering, fadeVisible: present, after: function() { presentChanged($parent) }, css: { selected: selected }, click: select">
+                <div class="operatorTitle" data-bind="drag: save, css: { hovering: hovering }">
+                    <span data-bind="text: name() + '[' + depth() + ']'"></span>
+                    <span class="deleteButton" data-bind="fadeVisible: deepestHover, click: function() { present(false); }"></span>
                 </div>
                 <div class="content" data-bind="template: { name: function(ctx) { return ctx.name() + 'Template'; } }"></div>
             </div>
             <!-- /ko -->
-            <div class="pipe"><img src="img/pipe.png" alt="Pipe"></div>
-            <!-- <div class="output"><img src="img/out.png" alt="Output"></div> -->
+            <div class="pipe" data-bind="drop: dropped"><img src="img/pipe.png" alt="Pipe"></div>
         </div>
     </script>
 
@@ -29,10 +29,13 @@
         <table class="sequence">
             <tr>
                 <!-- ko foreach: items -->
-                <td><img src="img/comma.png" alt="Comma"></td>
-                <td class="sequenceItem" data-bind="template: { name: 'pipelineTemplate' }"></td>
+                <td class="comma" data-bind="drop: sequenceDropped"><img src="img/comma.png" alt="Comma"></td>
+                <td class="sequenceItem" data-bind="hovering: hovering, fadeVisible: present, after: function() { presentChanged($parent) }, css: { selected: selected }, click: select">
+                    <div class="deleteButton" data-bind="fadeVisible: deepestHover, click: function() { present(false); }"></div>
+                    <div data-bind="template: { name: 'pipelineTemplate' }"></div>
+                </td>
                 <!-- /ko -->
-                <td><img src="img/comma.png" alt="Comma"></td>
+                <td class="comma" data-bind="drop: sequenceDropped"><img src="img/comma.png" alt="Comma"></td>
             </tr>
         </table>
     </script>
@@ -76,16 +79,26 @@
 </head>
 <body>
     <div class="inputText">
+        <!-- ko if: !selected() -->
         <div class="watermark">Enter your input text here...</div>
         <div class="textArea"><textarea data-bind="value: inputText, valueUpdate: 'afterkeydown', hasfocus: inputFocused, style: { opacity: inputOpacity }"></textarea></div>
+        <!-- /ko -->
+        <!-- ko if: selected -->
+        <div class="selectionData" data-bind="text: selected().latestInput()"></div>
+        <!-- /ko -->
     </div>
     <div class="outputText">
+        <!-- ko if: !selected() -->
         <div class="watermark">Output text will appear here...</div>
         <div class="textArea"><textarea readonly="true" data-bind="value: outputText, hasfocus: outputFocused, style: { opacity: outputOpacity }"></textarea></div>
+        <!-- /ko -->
+        <!-- ko if: selected -->
+        <div class="selectionData" data-bind="text: selected().latestOutput()"></div>
+        <!-- /ko -->
     </div>
-    <div class="tree" data-bind="template: { name: 'pipelineTemplate', data: pipeline }"></div>
+    <div class="tree" data-bind="template: { name: 'pipelineTemplate', data: pipeline }, click: function() { selected(null); }"></div>
     <div class="palette" data-bind="foreach: operators">
-        <div class="item" data-bind="text: name"></div>
+        <div class="paletteItem" data-bind="text: name, drag: create"></div>
     </div>
 </body>
 </html>

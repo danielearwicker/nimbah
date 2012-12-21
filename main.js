@@ -1,25 +1,148 @@
 
+var stringify = function(obj) {
+    return typeof obj == 'string' ? obj : JSON.stringify(obj, null, 4);
+};
+
 var viewModel = {
-    inputText: ko.observable(''),
+    inputText: ko.observable('Frogs are a diverse and largely carnivorous group of \nshort-bodied, tailless amphibians composing the order Anura \n(Ancient Greek an-, without + oura, tail).\nThe oldest fossil "proto-frog" appeared in the early Triassic of Madagascar,\n but molecular clock dating suggests their origins may extend\nfurther back to the Permian, 265 million years ago.'),
     inputFocused: ko.observable(false),
     outputFocused: ko.observable(false),
     treeWidth: ko.observable(500),
-    treeHeight: ko.observable(500)
+    treeHeight: ko.observable(500),
+    hovers: ko.observableArray(),
+    selected: ko.observable()
 };
 
-var pipeline = function(operators) {
-    return ko.observableArray(operators);
-};
-
-var executePipeline = function(operators, value) {
-    operators.forEach(function(operator) {
-        value = operator.execute(value);
+viewModel.deepestHover = ko.computed(function() {
+    var candidates = viewModel.hovers();
+    candidates.sort(function(a, b) {
+        return a.depth() - b.depth();
     });
-    return value;
+    return candidates[candidates.length - 1];
+});
+
+var node = function() {
+    var model = {};
+    model.hovering = ko.observable(false);
+    model.deepestHover = ko.computed(function() {
+        return viewModel.deepestHover() == model;
+    });
+    ko.computed(function() {
+        if (model.hovering()) {
+            if (viewModel.hovers.indexOf(model) == -1) {
+                viewModel.hovers.push(model);
+            }
+        } else {
+            viewModel.hovers.remove(model);
+        }
+    });
+    model.present = ko.observable(true);
+    model.presentChanged = function() {
+        if (!model.present()) {
+            model.remove();
+        }
+    };
+    model.parent = ko.observable(null);
+    model.depth = ko.computed(function() {
+        return !model.parent() ? 0 : model.parent().depth() + 1;
+    });
+    model.select = function(obj, ev) {
+        viewModel.selected(model);
+        ev.cancelBubble = true;
+    };
+    model.selected = ko.computed(function() {
+        return viewModel.selected() == model;
+    });
+    model.latestInput = ko.observable('');
+    model.latestOutput = ko.observable('');
+    return model;
 };
 
-var makeSettingsModel = function(name, model, settings) {
-    model.name = ko.observable(name);
+var pipeline = function(saved) {
+    var ops = ko.observableArray();
+
+    var loadOperator = function(saved) {
+        if (saved.name && ko.isObservable(saved.name)) {
+            return saved; // already loaded
+        }
+        return operators[saved.name](saved);
+    };
+
+    var model = node();
+    model.operators = ko.computed(function() {
+        // protect from modification (a bit)
+        return ops();
+    });
+    model.removeOperator = function(operator) {
+        operator.parent(null);
+        ops.remove(operator);
+    };
+    model.insertOperator = function(index, operator) {
+        operator = loadOperator(operator);
+        ops.splice(index, 0, operator);
+        operator.parent(model);
+    };
+    model.addOperator = function(operator) {
+        operator = loadOperator(operator);
+        ops.push(operator);
+        operator.parent(model);
+    };
+
+    if (Array.isArray(saved)) {
+        saved.forEach(function(savedOp) {
+            model.addOperator(savedOp);
+        });
+    }
+    model.execute = function(value) {
+        model.latestInput(stringify(value));
+        ops().forEach(function(operator) {
+            operator.latestInput(stringify(value));
+            value = operator.execute(value);
+            operator.latestOutput(stringify(value));
+        });
+        model.latestOutput(stringify(value));
+        return value;
+    };
+    model.dropped = function(context, dropped) {
+        model.addOperator(dropped);
+    };
+    model.save = function() {
+        return ops().map(function(operator) {
+            return operator.save();
+        });
+    };
+    return model;
+};
+
+var operator = function(saved) {
+    var model = node();
+    model.name = ko.observable(saved.name);
+
+    model.remove = function() {
+        if (model.parent()) {
+            model.parent().removeOperator(model);
+        }
+    };
+
+    model.dropped = function(context, dropped) {
+        model.parent().insertOperator(context.$index(), dropped);
+    };
+    model.save = function() {
+        return { name: model.name() };
+    };
+    model.extendSave = function(handler) {
+        var baseSave = model.save;
+        model.save = function() {
+            var saved = baseSave();
+            handler(saved);
+            return saved;
+        };
+    };
+    return model;
+};
+
+var makeSettingsModel = function(saved, settings) {
+    var model = operator(saved);
 
     if (!model.settings) {
         model.settings = [];
@@ -28,7 +151,7 @@ var makeSettingsModel = function(name, model, settings) {
     Object.keys(settings).forEach(function(name) {
         var setting = settings[name];
         if (!model[name]) {
-            model[name] = ko.observable(setting.init);
+            model[name] = ko.observable(name in saved ? saved[name] : settings[name].init);
         }
 
         var error = ko.observable('');
@@ -61,14 +184,19 @@ var makeSettingsModel = function(name, model, settings) {
         });
     });
 
+    model.extendSave(function(saved) {
+        Object.keys(settings).forEach(function(name) {
+            saved[name] = model[name]();
+        });
+    });
     return model;
 };
 
 var operators = {};
 
-operators.split = function(separator) {
-    var model = makeSettingsModel('split', {}, {
-       separator: { init: separator || '', size: 30 }
+operators.split = function(saved) {
+    var model = makeSettingsModel(saved, {
+       separator: { init: '\n', size: 30 }
     });
     model.execute = function(input) {
         if (input && typeof input.split == 'function') {
@@ -79,9 +207,9 @@ operators.split = function(separator) {
     return model;
 };
 
-operators.join = function(separator) {
-    var model = makeSettingsModel('join', {}, {
-        separator: { init: separator || '', size: 30 }
+operators.join = function(saved) {
+    var model = makeSettingsModel(saved, {
+        separator: { init: '\n', size: 30 }
     });
     model.execute = function(input) {
         if (input && typeof input.join == 'function') {
@@ -92,12 +220,9 @@ operators.join = function(separator) {
     return model;
 };
 
-operators.pick = function(item) {
-    if (arguments.length === 0) {
-        item = '';
-    }
-    var model = makeSettingsModel('pick', {}, {
-        item: { init: item }
+operators.pick = function(saved) {
+    var model = makeSettingsModel(saved, {
+        item: { init: '' }
     });
     model.execute = function(input) {
         if (input) {
@@ -108,54 +233,33 @@ operators.pick = function(item) {
     return model;
 };
 
-operators.string = function(val) {
-    var model = makeSettingsModel('string', {}, {
-        value: { init: val || '' }
+operators.string = function(saved) {
+    var model = makeSettingsModel(saved, {
+        value: { init: '' }
     });
-    model.execute = function(input) {
+    model.execute = function() {
         return model.value();
     };
     return model;
 };
 
-operators.map = function(withEachItem) {
-    var data = ko.observable([]);
-    var model = {
-        name: ko.observable('map'),
-        withEachItem: pipeline(withEachItem || []),
-        position: ko.observable(0)
-    };
-    model.displayPosition = ko.computed(function() {
-        return model.position() + 1;
-    });
-    model.length = ko.computed(function() {
-        return data().length;
-    })
-    model.hasPrevious = ko.computed(function() {
-        return model.position() > 0;
-    });
-    model.hasNext = ko.computed(function() {
-        return model.position() < (data().length - 1);
-    });
-    model.previous = function() {
-        if (model.hasPrevious()) {
-            model.position(model.position() - 1);
+operators.trim = function(saved) {
+    var model = makeSettingsModel(saved, {});
+    model.execute = function(input) {
+        if (input && input.trim) {
+            return input.trim();
         }
+        return input;
     };
-    model.next = function() {
-        if (model.hasNext()) {
-            model.position(model.position() + 1);
-        }
-    };
+    return model;
+};
 
+operators.sum = function(saved) {
+    var model = makeSettingsModel(saved, {});
     model.execute = function(input) {
         if (Array.isArray(input)) {
-            model.position(Math.min(model.position(), (input.length - 1)));
-            data(input);
-        }
-        if (input && typeof input.map == 'function') {
-            return input.map(function(item) {
-                return executePipeline(model.withEachItem(), item);
+            return input.reduce(function(l, r) {
+                return l + r;
             });
         }
         return input;
@@ -163,46 +267,120 @@ operators.map = function(withEachItem) {
     return model;
 };
 
-operators.sequence = function(items) {
-    var model = {
-        name: ko.observable('sequence'),
-        items: ko.observableArray(items ? items.map(function(itemObservables) {
-            if (ko.isObservable(itemObservables)) {
-                return itemObservables;
-            }
-            if (Array.isArray(itemObservables)) {
-                return ko.observableArray(itemObservables);
-            }
-            return ko.observableArray([itemObservables]);
-        }) : [])
+operators.map = function(saved) {
+    var data = ko.observable([]);
+
+    var model = operator(saved);
+    model.withEachItem = pipeline(saved.withEachItem);
+    model.withEachItem.parent(model);
+    model.position = ko.observable(0);
+    model.displayPosition = ko.computed(function() {
+        return model.position() + 1;
+    });
+    model.length = ko.computed(function() {
+        return data().length;
+    });
+
+    ko.computed(function() {
+        model.position(Math.min(model.position(), (data().length - 1)));
+    }).extend({ throttle: 100 });
+
+    var update = function() {
+        var obj = data(), pos = model.position();
+        if (obj && obj.length && (pos < obj.length)) {
+            model.withEachItem.execute(obj[pos]);
+        }
+    };
+
+    model.hasPrevious = ko.computed(function() {
+        return model.position() > 0;
+    });
+    model.hasNext = ko.computed(function() {
+        return model.position() < (data().length - 1);
+    });
+    model.previous = function(obj, ev) {
+        ev.cancelBubble = true;
+        if (model.hasPrevious()) {
+            model.position(model.position() - 1);
+            update();
+        }
+    };
+    model.next = function(obj, ev) {
+        ev.cancelBubble = true;
+        if (model.hasNext()) {
+            model.position(model.position() + 1);
+            update();
+        }
     };
     model.execute = function(input) {
-        return model.items().map(function(itemPipeline) {
-            return executePipeline(itemPipeline(), input);
-        });
+        data(Array.isArray(input) ? input : []);
+        if (input && typeof input.map == 'function') {
+            var output = input.map(function(item) {
+                return model.withEachItem.execute(item);
+            });
+            update();
+            return output;
+        }
+        return input;
     };
+
+    model.extendSave(function(saved) {
+        saved.withEachItem = model.withEachItem.save();
+    });
+
     return model;
 };
 
-viewModel.pipeline = pipeline([
-    operators.split('\n'),
-    operators.map([
-        operators.split(' '),
-        operators.sequence([
-            [ operators.string('First: ') ],
-            [ operators.pick(0) ],
-            [ operators.string(', Second: ') ],
-            [ operators.pick(1) ]
-        ]),
-        operators.join('')
-    ]),
-    operators.join('\n')
-]);
+operators.sequence = function(saved) {
+    var model = operator(saved);
+
+    var makeItem = function(saved) {
+        var itemModel = pipeline(saved);
+        itemModel.parent(model);
+        itemModel.remove = function() {
+            model.items.remove(itemModel);
+        };
+        itemModel.sequenceDropped = function(context, dropped) {
+            model.items.splice(context.$index(), 0, makeItem([dropped]));
+        };
+        return itemModel;
+    };
+
+    model.items = ko.observableArray(saved.items ? saved.items.map(makeItem) : []);
+    model.execute = function(input) {
+        return model.items().map(function(itemPipeline) {
+            return itemPipeline.execute(input);
+        });
+    };
+    model.sequenceDropped = function(context, dropped) {
+        model.items.push(makeItem([dropped]));
+    };
+    model.extendSave(function(saved) {
+        saved.items = model.items().map(function(item) {
+            return item.save();
+        });
+    });
+
+    return model;
+};
+
+var saved = localStorage.getItem('savedPipeline');
+try {
+    saved = JSON.parse(saved);
+} catch (x) {
+    saved = [];
+}
+
+viewModel.pipeline = pipeline(saved);
+
+ko.computed(function() {
+    localStorage.setItem("savedPipeline", stringify(viewModel.pipeline.save()));
+});
 
 viewModel.outputText = ko.computed(function() {
-    var output = executePipeline(viewModel.pipeline(), viewModel.inputText());
-    return (typeof output == 'string') ? output : JSON.stringify(output, null, 4);
+    return stringify(viewModel.pipeline.execute(viewModel.inputText()));
 }).extend({ throttle: 200 });
+
 
 viewModel.inputOpacity = ko.computed(function() {
     return (!viewModel.inputFocused() && !viewModel.inputText()) ? 0.3 : 1;
@@ -218,7 +396,9 @@ sortedOperators.sort();
 viewModel.operators = ko.observableArray(sortedOperators.map(function(name) {
     return {
         name: name,
-        create: operators[name]
+        create: function() {
+            return { name: name };
+        }
     };
 }));
 

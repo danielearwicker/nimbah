@@ -20,12 +20,16 @@ body {
     height: 150px;
 }
 
-.textArea, .watermark {
+.textArea, .watermark, .selectionData {
     position: absolute;
     left: 10px;
     top: 10px;
     right: 10px;
     bottom: 14px;
+}
+
+.selectionData {
+    background: #ddffdd;
 }
 
 .watermark {
@@ -59,13 +63,14 @@ textarea {
     margin: 8px;
 }
 
-.palette .item {
+.paletteItem {
     background: #46c;
     color: white;
     border-bottom: 1px solid gray;
     text-align: center;
     margin: 3px;
     padding: 2px;
+    cursor: pointer;
 }
 
 .pipeline {
@@ -77,7 +82,13 @@ textarea {
     margin: 4px;
 }
 
-.operator, .sequenceItem, .palette, .palette .item {
+.pipe.dragHover, .comma.dragHover {
+    background: silver;
+    min-width: 100px;
+    min-height: 30px;
+}
+
+.operator, .sequenceItem, .palette, .paletteItem, .selectionData {
     border-radius: 4px;
     box-shadow: 3px 3px 10px gray;
 }
@@ -86,13 +97,18 @@ textarea {
     border: 1px solid gray;
     background: #eee;
     display: inline-block;
+    position: relative;
 }
 
-.operator .title {
+.operatorTitle {
     background: #46c;
     color: white;
     border-bottom: 1px solid gray;
     padding: 1px 6px;
+}
+
+.operatorTitle.hovering {
+    background: #4d8dff;
 }
 
 .operator table td {
@@ -109,8 +125,13 @@ textarea {
 }
 
 .deleteButton {
-    float: right;
     cursor: pointer;
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    width: 16px;
+    height: 16px;
+    background-image: url(img/delete.png)
 }
 
 .dataNavigator {
@@ -120,6 +141,7 @@ textarea {
 
 .sequence {
     margin: 4px;
+    min-height: 100px;
 }
 
 .sequenceItem {
@@ -129,4 +151,8 @@ textarea {
 
 .withEachItem {
     background: #eeefff;
+}
+
+.selected {
+    border: 2px solid #00ee33;
 }
