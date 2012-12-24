@@ -32,7 +32,7 @@ ko.bindingHandlers.drag = {
             start: function(evt, ui) {
                 console.log(ui);
             },
-            containment: 'document',
+            containment: 'window',
             helper: function(a, b, c) {
                 var h = $(element).clone().css({
                     width: $(element).width()
@@ -51,9 +51,49 @@ ko.bindingHandlers.drop = {
         $(element).droppable({
             tolerance: 'pointer',
             hoverClass: 'dragHover',
+            activeClass: 'dragActive',
             drop: function(evt, ui) {
                 value(context, ui.helper.data('ko.draggable.data'));
             }
         });
     }
 };
+
+/*
+ko.virtualElements.allowedBindings.link = true;
+
+ko.bindingHandlers.link = {
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
+
+        var config = ko.utils.unwrapObservable(valueAccessor());
+
+        if (config.data) {
+            context = context.createChildContext(ko.utils.unwrapObservable(config.data));
+        }
+
+        var path = config.path;
+        if (typeof path == 'function') {
+            path = path(viewModel, context);
+        }
+        if (path.indexOf('.') == -1) {
+            path += '.html';
+        }
+
+        $.get(path).done(function(src) {
+            var tempDiv = $('<div></div>');
+            tempDiv.html(src);
+            var nodes = [];
+            tempDiv.children().each(function() {
+                nodes.push($(this)[0]);
+            });
+            ko.virtualElements.setDomNodeChildren(element, nodes);
+
+            //setTimeout(function() {
+                ko.applyBindingsToDescendants(context, element);
+            //}, 500);
+        });
+
+        return { controlsDescendantBindings: true };
+    }
+};
+  */
