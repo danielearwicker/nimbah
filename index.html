@@ -21,7 +21,7 @@
             <!-- ko foreach: readOnlyChildren -->
             <div class="pipe" data-bind="drop: dropped"><img src="img/pipe.png" alt="Pipe"></div>
             <div class="operator" data-bind="hovering: hovering, fadeVisible: present, after: function() { presentChanged($parent) }, css: { selected: selected }, click: select">
-                <div class="operatorTitle" data-bind="drag: save, css: { hovering: hovering }">
+                <div class="operatorTitle" data-bind="drag: drag, css: { hovering: hovering }">
                     <span data-bind="text: name"></span>
                     <span class="deleteButton" data-bind="fadeVisible: deepestHover, click: function() { present(false); }"></span>
                 </div>
@@ -109,7 +109,7 @@
             <div class="textArea"><textarea readonly="true" data-bind="value: outputText, hasfocus: outputFocused, style: { opacity: outputOpacity }"></textarea></div>
             <!-- /ko -->
             <!-- ko if: selected -->
-            <div class="dataDisplay" data-bind="template: { name: 'dataDisplayTemplate', if: selected(), data: formatData(selected().outputValue()) }"></div>
+            <div class="dataDisplay" data-bind="template: { name: 'dataDisplayTemplate', if: selected(), data: formatData(selected() ? selected().outputValue() : null) }"></div>
             <!-- /ko -->
         </div>
         <div class="commands" data-bind="foreach: commands">

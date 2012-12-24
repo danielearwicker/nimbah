@@ -26,6 +26,26 @@ operators.join = function(saved) {
     return model;
 };
 
+operators.flatten = function(saved) {
+    var model = makeSettingsModel(saved, {});
+    model.outputValue = ko.computed(function() {
+        var input = model.inputValue();
+        if (Array.isArray(input)) {
+            var combined = [];
+            input.forEach(function(ar) {
+                if (Array.isArray(ar)) {
+                    combined = combined.concat(ar);
+                } else {
+                    combined.push(ar);
+                }
+            });
+            return combined;
+        }
+        return input;
+    });
+    return model;
+};
+
 operators.pick = function(saved) {
     var settings = {
         item: { init: null, type: 'options' }
@@ -34,7 +54,7 @@ operators.pick = function(saved) {
     var model = makeSettingsModel(saved, settings);
 
     settings.item.options = ko.computed(function() {
-        var input = model.latestInput();
+        var input = model.inputValue();
         var keys = [], item = model.item();
         if (input && (typeof input == 'object')) {
             keys = Object.keys(input);
@@ -57,7 +77,7 @@ operators.pick = function(saved) {
     return model;
 };
 
-operators.string = function(saved) {
+operators.constant = function(saved) {
     var model = makeSettingsModel(saved, {
         value: { init: '' }
     });

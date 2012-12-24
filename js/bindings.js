@@ -34,6 +34,7 @@ ko.bindingHandlers.drag = {
 
         var dragScroll = function() {
             if ((new Date().getTime() - dragLastMoveTime) < 1000) {
+                console.log('Waiting for stationary mouse...');
                 return;
             }
             $('.ko-drag-autoscroll').each(function() {
@@ -41,25 +42,32 @@ ko.bindingHandlers.drag = {
                 var areaOffset = scrollableArea.offset();
                 var l = areaOffset.left,
                     t = areaOffset.top,
-                    r = areaOffset.left + scrollableArea.width(),
-                    b = areaOffset.top + scrollableArea.height();
+                    r = areaOffset.left + scrollableArea.outerWidth(),
+                    b = areaOffset.top + scrollableArea.outerHeight();
                 if (dragX > l && dragX < r && dragY > t && dragY < b) {
                     l += margin;
                     t += margin;
                     r -= margin;
                     b -= margin;
+                    console.log('Mouse is over autoscroll element: ' + dragX + ', ' + dragY + ' - { ' +
+                        l + ', ' + t + ' - ' + r + ', ' + b + ' }');
+
                     var scrollX = 0, scrollY = 0;
                     if (dragX < l) {
                         scrollX = -1;
+                        console.log('Autoscroll right');
                     }
                     if (dragX > r) {
                         scrollX = 1;
+                        console.log('Autoscroll left');
                     }
                     if (dragY < t) {
                         scrollY = -1;
+                        console.log('Autoscroll top');
                     }
                     if (dragY > b) {
                         scrollY = 1;
+                        console.log('Autoscroll bottom');
                     }
                     scrollableArea[0].scrollLeft += (scrollX * speed);
                     scrollableArea[0].scrollTop += (scrollY * speed);
@@ -67,15 +75,14 @@ ko.bindingHandlers.drag = {
             });
         };
 
-
         var value = valueAccessor();
         $(element).draggable({
             containment: 'window',
-            helper: function(a, b, c) {
+            helper: function(evt, ui) {
                 var h = $(element).clone().css({
                     width: $(element).width()
                 });
-                h.data('ko.draggable.data', value(context));
+                h.data('ko.draggable.data', value(context, evt));
                 return h;
             },
             appendTo: 'body',
@@ -83,8 +90,8 @@ ko.bindingHandlers.drag = {
                 dragTimer = setInterval(dragScroll, 100);
             },
             drag: function(evt, ui) {
-                dragX = ui.offset.left;
-                dragY = ui.offset.top;
+                dragX = evt.pageX;
+                dragY = evt.pageY;
                 dragLastMoveTime = new Date().getTime();
             },
             stop: function(evt, ui) {

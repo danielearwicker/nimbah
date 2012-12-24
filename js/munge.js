@@ -11,10 +11,11 @@ var nameMap = {
     html: 'H',
     map: 'M',
     filter: 'F',
+    flatten: 'B',
     sequence: 'L',
+    constant: '"',
 
     name: 'n',
-    string: '"',
     separator: 's',
     item: 'i',
     value: 'v',
@@ -43,6 +44,8 @@ var mungeImpl = function(obj, parts) {
             mungeImpl(item, parts);
         });
         parts.push(']');
+    } else if (obj === null || obj === undefined) {
+        parts.push('!');
     } else if (typeof obj == 'object') {
         parts.push('{');
         Object.keys(obj).forEach(function(k) {
@@ -91,6 +94,9 @@ var demungeImpl = function(str, pos) {
         }
         pos.n++;
         return obj;
+    }
+    if (ch == '!') {
+        return null;
     }
     var len = parseInt(str.substr(pos.n-1, 4), 16);
     pos.n += 3;

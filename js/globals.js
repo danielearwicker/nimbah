@@ -252,6 +252,16 @@ var operator = function(saved) {
     model.name = saved.name;
     model.template = saved.name;
 
+    model.drag = function(context, evt) {
+        var saved = model.save();
+        if (!evt.ctrlKey) {
+            setTimeout(function() {
+                model.remove();
+            }, 100);
+        }
+        return saved;
+    };
+
     model.dropped = function(context, dropped) {
         model.previousSibling(loadOperator(dropped));
     };

@@ -5,6 +5,14 @@ commands.save = {
     }
 };
 
+commands.new = {
+    execute: function() {
+        viewModel.pipeline(pipeline([]));
+        location.hash = '';
+    }
+};
+
+
 var sortedCommands = Object.keys(commands);
 sortedCommands.sort();
 viewModel.commands = ko.observableArray(sortedCommands.map(function(name) {
