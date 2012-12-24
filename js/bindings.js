@@ -27,11 +27,49 @@ ko.bindingHandlers.hovering = {
 
 ko.bindingHandlers.drag = {
     init: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
+
+        var dragTimer = null, dragX = 0, dragY = 0, dragLastMoveTime = null;
+
+        var margin = 32, speed = 32;
+
+        var dragScroll = function() {
+            if ((new Date().getTime() - dragLastMoveTime) < 1000) {
+                return;
+            }
+            $('.ko-drag-autoscroll').each(function() {
+                var scrollableArea = $(this);
+                var areaOffset = scrollableArea.offset();
+                var l = areaOffset.left,
+                    t = areaOffset.top,
+                    r = areaOffset.left + scrollableArea.width(),
+                    b = areaOffset.top + scrollableArea.height();
+                if (dragX > l && dragX < r && dragY > t && dragY < b) {
+                    l += margin;
+                    t += margin;
+                    r -= margin;
+                    b -= margin;
+                    var scrollX = 0, scrollY = 0;
+                    if (dragX < l) {
+                        scrollX = -1;
+                    }
+                    if (dragX > r) {
+                        scrollX = 1;
+                    }
+                    if (dragY < t) {
+                        scrollY = -1;
+                    }
+                    if (dragY > b) {
+                        scrollY = 1;
+                    }
+                    scrollableArea[0].scrollLeft += (scrollX * speed);
+                    scrollableArea[0].scrollTop += (scrollY * speed);
+                }
+            });
+        };
+
+
         var value = valueAccessor();
         $(element).draggable({
-            start: function(evt, ui) {
-                console.log(ui);
-            },
             containment: 'window',
             helper: function(a, b, c) {
                 var h = $(element).clone().css({
@@ -40,7 +78,20 @@ ko.bindingHandlers.drag = {
                 h.data('ko.draggable.data', value(context));
                 return h;
             },
-            appendTo: 'body'
+            appendTo: 'body',
+            start: function(evt, ui) {
+                dragTimer = setInterval(dragScroll, 100);
+            },
+            drag: function(evt, ui) {
+                dragX = ui.offset.left;
+                dragY = ui.offset.top;
+                dragLastMoveTime = new Date().getTime();
+            },
+            stop: function(evt, ui) {
+                if (dragTimer != null) {
+                    clearInterval(dragTimer);
+                }
+            }
         });
     }
 };
@@ -58,42 +109,3 @@ ko.bindingHandlers.drop = {
         });
     }
 };
-
-/*
-ko.virtualElements.allowedBindings.link = true;
-
-ko.bindingHandlers.link = {
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
-
-        var config = ko.utils.unwrapObservable(valueAccessor());
-
-        if (config.data) {
-            context = context.createChildContext(ko.utils.unwrapObservable(config.data));
-        }
-
-        var path = config.path;
-        if (typeof path == 'function') {
-            path = path(viewModel, context);
-        }
-        if (path.indexOf('.') == -1) {
-            path += '.html';
-        }
-
-        $.get(path).done(function(src) {
-            var tempDiv = $('<div></div>');
-            tempDiv.html(src);
-            var nodes = [];
-            tempDiv.children().each(function() {
-                nodes.push($(this)[0]);
-            });
-            ko.virtualElements.setDomNodeChildren(element, nodes);
-
-            //setTimeout(function() {
-                ko.applyBindingsToDescendants(context, element);
-            //}, 500);
-        });
-
-        return { controlsDescendantBindings: true };
-    }
-};
-  */

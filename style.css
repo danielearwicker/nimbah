@@ -4,6 +4,24 @@ body {
     font-size: 9pt;
 }
 
+.app {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 20px;
+}
+
+.status {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16px;
+    background: silver;
+    padding: 2px;
+}
+
 .inputText {
     position: absolute;
     left: 0;
@@ -20,12 +38,16 @@ body {
     height: 150px;
 }
 
-.textArea, .watermark, .selectionData {
+.textArea, .watermark, .dataDisplay {
     position: absolute;
     left: 10px;
     top: 10px;
     right: 10px;
     bottom: 14px;
+}
+
+.dataDisplay {
+    overflow: auto;
 }
 
 .selectionData {
@@ -44,12 +66,20 @@ textarea {
 
 .tree {
     position: absolute;
-    left: 0;
+    left: 116px;
     right: 116px;
     top: 150px;
     bottom: 150px;
     text-align: center;
     overflow: auto;
+}
+
+.tree > .pipeline {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .palette {
@@ -73,6 +103,17 @@ textarea {
     cursor: pointer;
 }
 
+.commands {
+    position: absolute;
+    left: 0;
+    top: 150px;
+    bottom: 150px;
+    width: 100px;
+    overflow: auto;
+    background: silver;
+    margin: 8px;
+}
+
 .pipeline {
     padding: 8px;
 }
@@ -82,13 +123,7 @@ textarea {
     margin: 4px;
 }
 
-.pipe.dragHover, .comma.dragHover {
-    background: silver;
-    min-width: 100px;
-    min-height: 30px;
-}
-
-.operator, .sequenceItem, .palette, .paletteItem, .selectionData {
+.operator, .sequenceItem, .palette, .paletteItem, .selectionData, .dataField {
     border-radius: 4px;
     box-shadow: 3px 3px 10px gray;
 }
@@ -154,5 +189,34 @@ textarea {
 }
 
 .selected {
-    border: 2px solid #00ee33;
+    border: 4px solid #00ee33;
+}
+
+.dataDisplayTable td {
+    position: relative;
+}
+
+.dataField {
+    background: #91bc8f;
+    color: white;
+    border: #006400;
+    min-width: 48px;
+    text-align: center;
+    padding: 2px;
+    margin: 3px;
+}
+
+.pipe.dragActive, .comma.dragActive {
+    border: 1px dashed silver;
+    min-width: 100px;
+}
+
+.pipe.dragHover, .comma.dragHover {
+    border: 1px solid gray;
+    min-width: 100px;
+}
+
+.commands button {
+    width: 92px;
+    margin: 3px;
 }
