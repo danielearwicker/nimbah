@@ -1,5 +1,3 @@
-var oldRefreshCount = 0;
-
 var viewModel = {
     inputText: ko.observable(localStorage.getItem('savedInputText') || ''),
     inputFocused: ko.observable(false),
@@ -12,35 +10,53 @@ var viewModel = {
         return typeof obj == 'string' ? obj : JSON.stringify(obj);
     },
     pipeline: ko.observable(null),
-    refreshCount: ko.observable(0)
+    layout: ko.observable('vertical'),
+    examples: examples
 };
 
-viewModel.formatData = function(data) {
-    if (data && typeof data == 'object') {
-        return {
-            text: '',
-            fields: Object.keys(data).map(function(key) {
-                return {
-                    name: key,
-                    value: viewModel.stringify(data[key]),
-                    pick: function() {
-                        return { name: 'pick', item: key };
-                    }
-                };
-            })
-        }
-    }
-    return {
-        text: viewModel.stringify(data),
-        fields: []
+viewModel.pipeline.subscribe(function() {
+    viewModel.selected(null);
+});
+
+var selectedValue = function(member) {
+    var result = {
+        all: ko.observable([]),
+        position: ko.observable(0),
+        text: ko.observable('')
     };
+
+    ko.computed(function() {
+        var data = viewModel.selected();
+        if (data) {
+            data = data[member]();
+            if (data && typeof data == 'object') {
+                result.text('');
+                result.all(Object.keys(data).map(function(key) {
+                    return {
+                        name: key,
+                        value: viewModel.stringify(data[key]),
+                        pick: function() {
+                            return { name: 'pick', item: key };
+                        }
+                    };
+                }));
+                return;
+            }
+        }
+        result.text(viewModel.stringify(data));
+        result.all([]);
+    });
+    return result;
 };
+
+viewModel.selectedInputValue = selectedValue('inputValue');
+viewModel.selectedOutputValue = selectedValue('outputValue');
 
 ko.computed(function() {
     localStorage.setItem('savedInputText', viewModel.inputText());
 }).extend({ throttle: 200 });
 
-var operators = {}, commands = {};
+var operators = {}, commands = [];
 
 viewModel.deepestHover = ko.computed(function() {
     var candidates = viewModel.hovers();
@@ -236,7 +252,9 @@ var pipeline = function(saved) {
     });
 
     model.dropped = function(context, dropped) {
-        model.lastChild(loadOperator(dropped));
+        dropDialog(dropped, function(saved) {
+            model.lastChild(loadOperator(saved));
+        });
     };
     model.save = function() {
         return model.readOnlyChildren().map(function(operator) {
@@ -247,23 +265,55 @@ var pipeline = function(saved) {
     return model;
 };
 
+var dropDialog = function(dropped, handler) {
+    if (!dropped.remove) {
+        handler(dropped);
+        return;
+    }
+
+    var dlg = $('<div></div>').text('Copy or move?');
+    dlg.dialog({
+        width: 200,
+        title: 'Drag',
+        modal: true,
+        autoOpen: true,
+        close: function() {
+            dlg.remove();
+        },
+        buttons: [{
+            text: 'Copy',
+            click: function() {
+                handler(dropped.save());
+                dlg.dialog('close');
+            }
+        }, {
+            text: 'Move',
+            click: function() {
+                handler(dropped.save());
+                dropped.remove();
+                dlg.dialog('close');
+            }
+        }, {
+            text: 'Cancel',
+            click: function() {
+                dlg.dialog('close');
+            }
+        }]
+    });
+};
+
 var operator = function(saved) {
     var model = node();
     model.name = saved.name;
     model.template = saved.name;
 
-    model.drag = function(context, evt) {
-        var saved = model.save();
-        if (!evt.ctrlKey) {
-            setTimeout(function() {
-                model.remove();
-            }, 100);
-        }
-        return saved;
+    model.drag = function() {
+        return model;
     };
-
     model.dropped = function(context, dropped) {
-        model.previousSibling(loadOperator(dropped));
+        dropDialog(dropped, function(saved) {
+            model.previousSibling(loadOperator(saved));
+        });
     };
     model.save = function() {
         return { name: ko.utils.unwrapObservable(model.name) };
@@ -292,6 +342,26 @@ var operator = function(saved) {
     return model;
 };
 
+var settingTypes = {};
+
+settingTypes.js = {
+    init: function(setting) {
+        setting.type = 'string';
+        setting.name += ('(' + setting.args.join(',') + ')');
+        setting.evaluate = ko.computed(function() {
+            try {
+                var args = setting.args.slice(0);
+                args.push('with(' + args[0] + ') { return ' + setting.value() + ' }');
+                var f = Function.apply(null, args);
+                setting.errorMessage('');
+                return f;
+            } catch(x) {
+                setting.errorMessage(x.message);
+            }
+        });
+    }
+};
+
 var makeSettingsModel = function(saved, settings) {
     var model = operator(saved);
 
@@ -309,6 +379,7 @@ var makeSettingsModel = function(saved, settings) {
 
         var invalid;
 
+        setting.name = name;
         setting.type = setting.type || 'any';
         setting.size = setting.size || 100;
         setting.value = model[name];
@@ -316,7 +387,6 @@ var makeSettingsModel = function(saved, settings) {
         setting.hasError = ko.computed(function() {
             return !!setting.errorMessage();
         });
-
         setting.valueAsJson = ko.computed({
             read: function() {
                 if (setting.errorMessage()) {
@@ -334,6 +404,10 @@ var makeSettingsModel = function(saved, settings) {
                 }
             }
         });
+
+        if (settingTypes[setting.type]) {
+            settingTypes[setting.type].init(setting);
+        }
 
         model.settings.push(setting);
     });
@@ -414,7 +488,7 @@ var dataNavigator = function(saved) {
 
 var load = function(source) {
     try {
-        viewModel.pipeline(pipeline(demunge(source)));
+        viewModel.pipeline(pipeline(typeof source == 'string' ? JSON.parse(source) : source));
     } catch (x) {
         if (!viewModel.pipeline()) {
             viewModel.pipeline(pipeline([]));
@@ -423,7 +497,7 @@ var load = function(source) {
 };
 
 var save = function() {
-    return munge(viewModel.pipeline() ? viewModel.pipeline().save() : []);
+    return JSON.stringify(viewModel.pipeline() ? viewModel.pipeline().save() : []);
 };
 
 ko.computed(function() {

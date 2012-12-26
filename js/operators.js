@@ -12,20 +12,6 @@ operators.split = function(saved) {
     return model;
 };
 
-operators.join = function(saved) {
-    var model = makeSettingsModel(saved, {
-        separator: { init: '\n', size: 30 }
-    });
-    model.outputValue = ko.computed(function() {
-        var input = model.inputValue();
-        if (input && typeof input.join == 'function') {
-            return input.join(model.separator());
-        }
-        return input;
-    });
-    return model;
-};
-
 operators.flatten = function(saved) {
     var model = makeSettingsModel(saved, {});
     model.outputValue = ko.computed(function() {
@@ -111,22 +97,14 @@ operators.equals = function(saved) {
 
 operators.js = function(saved) {
     var settings = {
-        expression: { type: 'string', init: '', size: 120 }
+        expression: { type: 'js', args: ['context'], init: 'context', size: 120 }
     };
     var model = makeSettingsModel(saved, settings);
-    var func = ko.computed(function() {
-        try {
-            var f = Function('context', 'with(context) { return ' + model.expression() + ' }');
-            settings.expression.errorMessage('');
-            return f;
-        } catch(x) {
-            settings.expression.errorMessage(x.message);
-        }
-    });
+
     model.outputValue = ko.computed(function() {
         var input = model.inputValue();
         try {
-            return func().call(input, input);
+            return settings.expression.evaluate().call(input, input);
         } catch(x) {
             return x.message;
         }
@@ -134,14 +112,19 @@ operators.js = function(saved) {
     return model;
 };
 
-operators.sum = function(saved) {
-    var model = makeSettingsModel(saved, {});
+operators.reduce = function(saved) {
+    var settings = {
+        expression: { type: 'js', args: ['l', 'r' ], init: 'l + r', size: 120 }
+    };
+    var model = makeSettingsModel(saved, settings);
     model.outputValue = ko.computed(function() {
         var input = model.inputValue();
-        if (Array.isArray(input)) {
-            return input.reduce(function(l, r) {
-                return l + r;
-            });
+        try {
+            if (Array.isArray(input) && input.length != 0) {
+                return input.reduce(settings.expression.evaluate());
+            }
+        } catch(x) {
+            return x.message;
         }
         return input;
     });
@@ -163,47 +146,33 @@ operators.reverse = function(saved) {
 };
 
 operators.html = function(saved) {
-    var model = makeSettingsModel(saved, {});
+    var model = makeSettingsModel(saved, {
+        tag: { type: 'string', init: 'tr', size: 100 },
+        fetch: { init: 'innerHTML', type: 'options', options: [ 'innerHTML', 'outerHTML', 'innerText'] }
+    });
 
-    var recurseNode = function(nodes) {
-        var ar = [];
-        nodes.each(function() {
-            var node = $(this);
-            var obj = {
-                tag: node[0].tagName.toLowerCase()
-            };
-            var ch = recurseNode(node.children());
-            if (ch.length) {
-                obj.children = ch;
+    var forEachTag = function(node, name, func) {
+        if (node.nodeType == 1 && node.nodeName == name) {
+            func(node);
+        } else {
+            for (var c = node.firstChild; !!c; c = c.nextSibling) {
+                forEachTag(c, name, func);
             }
-            var attr = node[0].attributes;
-            if (attr && attr.length) {
-                var attrObj = obj['attributes'] = {};
-                for (var i = 0; i < attr.length; i++) {
-                    attrObj[attr[i].name] = attr[i].value;
-                }
-            }
-            var text = [];
-            var ch = node[0].childNodes;
-            for (var n = 0; n < ch.length; n++) {
-                if (ch[n].nodeType == 3) {
-                    text.push(ch[n].nodeValue);
-                }
-            }
-            if (text.length) {
-                obj.text = text.join('');
-            }
-            ar.push(obj);
-        });
-        return ar;
+        }
     };
 
     model.outputValue = ko.computed(function() {
         var input = model.inputValue();
+        var fetch = model.fetch() || 'innerHTML';
+        var tag = model.tag().toUpperCase();
         if (typeof input == 'string') {
             var dom = $('<div></div>');
             dom.html(input);
-            return recurseNode(dom.children());
+            var tags = [];
+            forEachTag(dom[0], tag, function(found) {
+                tags.push(found[fetch]);
+            });
+            return tags;
         }
         return input;
     });
@@ -232,7 +201,9 @@ operators.sequence = function(saved) {
     var makeItem = function(saved) {
         var itemModel = pipeline(saved);
         itemModel.sequenceDropped = function(context, dropped) {
-            itemModel.previousSibling(makeItem([dropped]));
+            dropDialog(dropped, function(saved) {
+                itemModel.previousSibling(makeItem([saved]));
+            });
         };
         return itemModel;
     };
@@ -254,7 +225,9 @@ operators.sequence = function(saved) {
     });
 
     model.sequenceDropped = function(context, dropped) {
-        model.lastChild(makeItem([dropped]));
+        dropDialog(dropped, function(saved) {
+            model.lastChild(makeItem([saved]));
+        });
     };
     model.extendSave(function(saved) {
         saved.items = model.readOnlyChildren().map(function(item) {

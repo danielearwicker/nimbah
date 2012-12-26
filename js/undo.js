@@ -17,7 +17,7 @@ var ignoreNextChange = true;
         }
     }).extend({ throttle: 200 });
 
-    commands.undo = {
+    commands.push({
         execute: function() {
             var popped = undoStack.pop();
             if (popped) {
@@ -32,9 +32,9 @@ var ignoreNextChange = true;
         enabled: ko.computed(function() {
             return undoStack().length != 0;
         })
-    };
+    });
 
-    commands.redo = {
+    commands.push({
         execute: function() {
             var popped = redoStack.pop();
             if (popped) {
@@ -49,6 +49,6 @@ var ignoreNextChange = true;
         enabled: ko.computed(function() {
             return redoStack().length != 0;
         })
-    };
+    });
 
 })();

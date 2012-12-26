@@ -5,15 +5,17 @@
 
     <script type='text/javascript' src='lib/knockout-2.2.0.debug.js'></script>
     <script type='text/javascript' src='lib/jquery-1.8.3.min.js'></script>
-    <script type='text/javascript' src='lib/jquery-ui-1.9.2.custom.js'></script>
+    <script type='text/javascript' src='lib/jquery-ui-1.9.2.custom/js/jquery-ui-1.9.2.custom.js'></script>
 
-    <script type='text/javascript' src='js/munge.js'></script>
     <script type='text/javascript' src='js/bindings.js'></script>
+    <script type='text/javascript' src='js/examples.js'></script>
+    <script type='text/javascript' src='js/exampleHtml.js'></script>
     <script type='text/javascript' src='js/globals.js'></script>
     <script type='text/javascript' src='js/operators.js'></script>
     <script type='text/javascript' src='js/undo.js'></script>
     <script type='text/javascript' src='js/startup.js'></script>
 
+    <link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.9.2.custom/css/smoothness/jquery-ui-1.9.2.custom.css">
     <link rel="stylesheet" type="text/css" href="style.css">
 
     <script type="text/html" id="pipelineTemplate">
@@ -50,8 +52,8 @@
     <script type="text/html" id="settingsTemplate">
         <table data-bind="foreach: settings">
             <tr>
-                <td data-bind="text: name"></td>
-                <td data-bind="template: { name: function(ctx) { return ko.utils.unwrapObservable(ctx.type) + 'SettingTemplate'; } }"></td>
+                <td class="settingsCellName" data-bind="text: name"></td>
+                <td class="settingsCellValue" data-bind="template: { name: function(ctx) { return ko.utils.unwrapObservable(ctx.type) + 'SettingTemplate'; } }"></td>
             </tr>
         </table>
     </script>
@@ -83,24 +85,24 @@
         <!-- ko if: text -->
         <pre data-bind="text: text"></pre>
         <!-- /ko -->
-        <table class="dataDisplayTable" data-bind="foreach: fields">
-            <tr>
-                <td><div class="dataField" data-bind="text: name, drag: pick"></div></td>
-                <td><pre data-bind="text: value"></pre></td>
-            </tr>
-        </table>
+        <div class="dataDisplayContainer">
+            <div class="dataDisplayContent" data-bind="virtualScroll: { rows: all, rowHeight: 26 }">
+                <div class="dataField" data-bind="text: name, drag: pick"></div>
+                <div class="dataValue"><pre data-bind="text: value"></pre></div>
+            </div>
+        </div>
     </script>
 
 </head>
 <body>
-    <div class="app">
+    <div class="app" data-bind="css: { horizontal: layout() == 'horizontal', vertical: layout() == 'vertical' }">
         <div class="inputText selectionData">
             <!-- ko if: !selected() -->
             <div class="watermark">Enter your input text here...</div>
             <div class="textArea"><textarea data-bind="value: inputText, valueUpdate: 'afterkeydown', hasfocus: inputFocused, style: { opacity: inputOpacity }"></textarea></div>
             <!-- /ko -->
             <!-- ko if: selected -->
-            <div class="dataDisplay" data-bind="template: { name: 'dataDisplayTemplate', if: selected(), data: formatData(selected().inputValue()) }"></div>
+            <div class="dataDisplay" data-bind="template: { name: 'dataDisplayTemplate', data: selectedInputValue }"></div>
             <!-- /ko -->
         </div>
         <div class="outputText selectionData">
@@ -109,19 +111,34 @@
             <div class="textArea"><textarea readonly="true" data-bind="value: outputText, hasfocus: outputFocused, style: { opacity: outputOpacity }"></textarea></div>
             <!-- /ko -->
             <!-- ko if: selected -->
-            <div class="dataDisplay" data-bind="template: { name: 'dataDisplayTemplate', if: selected(), data: formatData(selected() ? selected().outputValue() : null) }"></div>
+            <div class="dataDisplay" data-bind="template: { name: 'dataDisplayTemplate', data: selectedOutputValue }"></div>
             <!-- /ko -->
         </div>
-        <div class="commands" data-bind="foreach: commands">
-            <button data-bind="text: name, click: execute, enable: enabled"></button>
+        <div class="commands">
+            <div data-bind="foreach: commands">
+                <button data-bind="text: name, click: execute, enable: enabled"></button>
+            </div>
         </div>
         <div class="tree ko-drag-autoscroll" data-bind="template: { name: 'pipelineTemplate', data: pipeline }, click: function() { selected(null); }"></div>
+        <!-- ko if: !pipeline() || !pipeline().firstChild() -->
+        <div class="examples">
+            <p>To get started, drag one of the <span class="paletteItem">operators</span> onto the little arrow
+            <img src="img/pipe.png" alt="Pipe"> above to see what effect it has on the input text.</p>
+            <p>Or instead choose a starting point...</p>
+            <div data-bind="foreach: examples">
+                <div class="example" data-bind="text: title, click: load"></div>
+            </div>
+        </div>
+        <!-- /ko -->
         <div class="palette">
             <div data-bind="foreach: operators">
                 <div class="paletteItem" data-bind="text: name, drag: create"></div>
             </div>
         </div>
     </div>
-    <div class="status" data-bind="text: refreshCount"></div>
+    <div class="status">
+        <img src="img/vertical.png" data-bind="click: function() { layout('vertical'); }, css: { selected: layout() == 'vertical' }">
+        <img src="img/horizontal.png" data-bind="click: function() { layout('horizontal'); }, css: { selected: layout() == 'horizontal' }">
+    </div>
 </body>
 </html>

@@ -1,25 +1,20 @@
 
-commands.save = {
+commands.push({
+    name: 'save',
     execute: function() {
-        location.hash = save();
+        location.hash = encodeURIComponent(save());
     }
-};
+});
 
-commands.new = {
+commands.push({
+    name: 'new',
     execute: function() {
         viewModel.pipeline(pipeline([]));
         location.hash = '';
     }
-};
+});
 
-
-var sortedCommands = Object.keys(commands);
-sortedCommands.sort();
-viewModel.commands = ko.observableArray(sortedCommands.map(function(name) {
-    var command = commands[name];
-    if (!command.name) {
-        command.name = name;
-    }
+viewModel.commands = ko.observableArray(commands.map(function(command) {
     if (!command.enabled) {
         command.enabled = true;
     }
@@ -41,7 +36,7 @@ ignoreNextChange = true;
 
 if (location.hash) {
     try {
-        load(location.hash.substr(1));
+        load(decodeURIComponent(location.hash.substr(1)));
     } catch (x) {
         alert(x.message);
     }

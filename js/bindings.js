@@ -80,6 +80,7 @@ ko.bindingHandlers.drag = {
             containment: 'window',
             helper: function(evt, ui) {
                 var h = $(element).clone().css({
+                    width: $(element).width(),
                     width: $(element).width()
                 });
                 h.data('ko.draggable.data', value(context, evt));
@@ -114,5 +115,114 @@ ko.bindingHandlers.drop = {
                 value(context, ui.helper.data('ko.draggable.data'));
             }
         });
+    }
+};
+
+var simluatedObservable = (function() {
+
+    var timer = null;
+    var items = [];
+
+    var check = function() {
+        items = items.filter(function(item) {
+            return !!item.elem.parents('html').length;
+        });
+        if (items.length === 0) {
+            clearInterval(timer);
+            timer = null;
+            return;
+        }
+        items.forEach(function(item) {
+            item.obs(item.getter());
+        });
+    };
+
+    return function(elem, getter) {
+        var obs = ko.observable(getter());
+        items.push({ obs: obs, getter: getter, elem: $(elem) });
+        if (timer === null) {
+            timer = setInterval(check, 100);
+        }
+        return obs;
+    };
+})();
+
+ko.bindingHandlers.virtualScroll = {
+    init: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
+
+        var clone = $(element).clone();
+        $(element).empty();
+
+        var config = ko.utils.unwrapObservable(valueAccessor());
+        var rowHeight = ko.utils.unwrapObservable(config.rowHeight);
+
+        ko.computed(function() {
+            $(element).css({
+                height: config.rows().length * rowHeight
+            });
+        });
+
+        var offset = simluatedObservable(element, function() {
+            return $(element).offset().top;
+        });
+
+        var windowHeight = simluatedObservable(element, function() {
+            return window.innerHeight;
+        });
+
+        var created = {};
+
+        var refresh = function() {
+            var o = offset();
+            var data = config.rows();
+            var top = Math.max(0, Math.floor(-o / rowHeight) - 10);
+            var bottom = Math.min(data.length, Math.ceil((-o + windowHeight()) / rowHeight));
+
+            var required = {};
+
+            for (var row = top; row < bottom; row++) {
+                if (!created[row]) {
+                    var rowDiv = $('<div></div>');
+                    rowDiv.css({
+                        position: 'absolute',
+                        height: config.rowHeight,
+                        left: 0,
+                        right: 0,
+                        top: row * config.rowHeight
+                    });
+                    rowDiv.append(clone.clone().children());
+                    ko.applyBindingsToDescendants(context.createChildContext(data[row]), rowDiv[0]);
+                    required[row] = rowDiv;
+                    $(element).append(rowDiv);
+                } else {
+                    required[row] = created[row];
+                }
+            }
+
+            Object.keys(created).forEach(function(rowNum) {
+                if (!required[rowNum]) {
+                    created[rowNum].remove();
+                    delete created[rowNum];
+                }
+            });
+
+            Object.keys(required).forEach(function(rowNum) {
+                if (!created[rowNum]) {
+                    created[rowNum] = required[rowNum];
+                }
+            });
+        };
+
+        config.rows.subscribe(function() {
+            Object.keys(created).forEach(function(rowNum) {
+                created[rowNum].remove();
+                delete created[rowNum];
+            });
+            refresh();
+        });
+
+        ko.computed(refresh);
+
+        return { controlsDescendantBindings: true };
     }
 };
