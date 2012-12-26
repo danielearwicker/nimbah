@@ -81,7 +81,7 @@ ko.bindingHandlers.drag = {
             helper: function(evt, ui) {
                 var h = $(element).clone().css({
                     width: $(element).width(),
-                    width: $(element).width()
+                    height: $(element).height()
                 });
                 h.data('ko.draggable.data', value(context, evt));
                 return h;
@@ -118,7 +118,7 @@ ko.bindingHandlers.drop = {
     }
 };
 
-var simluatedObservable = (function() {
+var simulatedObservable = (function() {
 
     var timer = null;
     var items = [];
@@ -162,11 +162,11 @@ ko.bindingHandlers.virtualScroll = {
             });
         });
 
-        var offset = simluatedObservable(element, function() {
+        var offset = simulatedObservable(element, function() {
             return $(element).offset().top;
         });
 
-        var windowHeight = simluatedObservable(element, function() {
+        var windowHeight = simulatedObservable(element, function() {
             return window.innerHeight;
         });
 
@@ -177,8 +177,6 @@ ko.bindingHandlers.virtualScroll = {
             var data = config.rows();
             var top = Math.max(0, Math.floor(-o / rowHeight) - 10);
             var bottom = Math.min(data.length, Math.ceil((-o + windowHeight()) / rowHeight));
-
-            var required = {};
 
             for (var row = top; row < bottom; row++) {
                 if (!created[row]) {
@@ -192,23 +190,15 @@ ko.bindingHandlers.virtualScroll = {
                     });
                     rowDiv.append(clone.clone().children());
                     ko.applyBindingsToDescendants(context.createChildContext(data[row]), rowDiv[0]);
-                    required[row] = rowDiv;
+                    created[row] = rowDiv;
                     $(element).append(rowDiv);
-                } else {
-                    required[row] = created[row];
                 }
             }
 
             Object.keys(created).forEach(function(rowNum) {
-                if (!required[rowNum]) {
+                if (rowNum < top || rowNum >= bottom) {
                     created[rowNum].remove();
                     delete created[rowNum];
-                }
-            });
-
-            Object.keys(required).forEach(function(rowNum) {
-                if (!created[rowNum]) {
-                    created[rowNum] = required[rowNum];
                 }
             });
         };

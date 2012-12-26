@@ -146,10 +146,6 @@ body {
     bottom: 14px;
 }
 
-.dataDisplay {
-    overflow: auto;
-}
-
 .selectionData {
     background: #ddffdd;
 }
@@ -271,6 +267,7 @@ textarea {
     top: 0;
     right: 20px;
     bottom: 0;
+    overflow: auto;
 }
 
 .dataField {
@@ -296,6 +293,12 @@ textarea {
     right: 0;
     bottom: 0;
     padding-left: 14px;
+    overflow: hidden;
+}
+
+.dataValue pre {
+    margin: 0;
+    padding: 0;
 }
 
 .pipe.dragActive, .comma.dragActive {

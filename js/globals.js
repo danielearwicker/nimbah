@@ -34,7 +34,7 @@ var selectedValue = function(member) {
                 result.all(Object.keys(data).map(function(key) {
                     return {
                         name: key,
-                        value: viewModel.stringify(data[key]),
+                        value: viewModel.stringify(data[key]).trim().replace(/\n/g, ' '),
                         pick: function() {
                             return { name: 'pick', item: key };
                         }
