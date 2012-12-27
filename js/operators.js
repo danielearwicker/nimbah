@@ -159,6 +159,12 @@ operators.reduce = function(saved) {
     return model;
 };
 
+var nbsp = String.fromCharCode(160);
+
+var fixSpaces = function(str) {
+    return str.replace(/\s/g, nbsp);
+};
+
 operators.substring = function(saved) {
     var settings = {
         start: { type: 'number', init: 0 },
@@ -189,9 +195,9 @@ operators.substring = function(saved) {
             if (mid.length > (max + ellipsis.length)) {
                 mid = mid.substr(0, max/2) + ellipsis + mid.substr(-max/2);
             }
-            model.left(left);
-            model.mid(mid);
-            model.right(right);
+            model.left(fixSpaces(left));
+            model.mid(fixSpaces(mid));
+            model.right(fixSpaces(right));
             return result;
         }
         return input;

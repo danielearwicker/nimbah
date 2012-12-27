@@ -2,8 +2,6 @@ var viewModel = {
     inputText: ko.observable(localStorage.getItem('savedInputText') || ''),
     inputFocused: ko.observable(false),
     outputFocused: ko.observable(false),
-    treeWidth: ko.observable(500),
-    treeHeight: ko.observable(500),
     hovers: ko.observableArray(),
     selected: ko.observable(),
     stringify: function(obj) {
@@ -239,13 +237,6 @@ var pipeline = function(saved) {
         });
     }
 
-    // Tie first child's input to our input
-    ko.computed(function() {
-        if (model.firstChild()) {
-            model.firstChild().externalInputValue(model.inputValue());
-        }
-    });
-
     // And output is last child's output, or our input if we have no children
     model.outputValue = ko.computed(function() {
         return model.lastChild() ? model.lastChild().outputValue() : model.inputValue();
@@ -327,16 +318,9 @@ var operator = function(saved) {
         };
     };
 
-    // If an operator has a previous sibling, its inputValue is that
-    // sibling's output, otherwise externalInputValue is used
-    model.externalInputValue = ko.observable(null);
-
     model.inputValue = ko.computed(function() {
-        var prev = model.previousSibling();
-        if (prev) {
-            return prev.outputValue();
-        }
-        return model.externalInputValue();
+        return model.previousSibling() ? model.previousSibling().outputValue() :
+               model.parent() ? model.parent().inputValue() : null;
     });
 
     return model;
