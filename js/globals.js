@@ -403,6 +403,7 @@ settingTypes.number = {
 settingTypes.js = {
     init: function(setting) {
         setting.type = 'string';
+        setting.valueAsString = setting.value;
         setting.name += ('(' + setting.args.join(',') + ')');
         setting.evaluate = ko.computed(function() {
             try {
