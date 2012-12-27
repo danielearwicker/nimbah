@@ -24,10 +24,16 @@ body {
 .status img {
     border: 1px solid silver;
     margin: 1px;
+    vertical-align: middle;
 }
 
 .status img.selected {
     border: 1px solid white;
+}
+
+.status span, .status a {
+    padding: 6px;
+    vertical-align: middle;
 }
 
 /* Absolute positioned pieces of the layout */
@@ -46,7 +52,7 @@ body {
 }
 
 .examples {
-    padding: 100px;
+    padding: 60px;
     font-size: 12pt;
     line-height: 1.6em;
 }
@@ -144,6 +150,10 @@ body {
     top: 10px;
     right: 10px;
     bottom: 14px;
+}
+
+.dataDisplay {
+    overflow: auto;
 }
 
 .selectionData {
@@ -267,7 +277,6 @@ textarea {
     top: 0;
     right: 20px;
     bottom: 0;
-    overflow: auto;
 }
 
 .dataField {
@@ -332,4 +341,23 @@ textarea {
 }
 
 .settingsCellValue {
+}
+
+.substring {
+    margin-top: 4px;
+    border-top: 1px solid gray;
+    text-align: left;
+    background: silver;
+}
+.substring > div {
+    display: inline-block;
+    background: silver;
+    padding: 4px 0 4px 0;
+    margin: 0;
+}
+
+.substring .mid {
+    background: white;
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
 }

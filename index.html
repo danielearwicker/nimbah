@@ -58,12 +58,8 @@
         </table>
     </script>
 
-    <script type="text/html" id="anySettingTemplate">
-        <input type="text" data-bind="value: valueAsJson, valueUpdate: 'afterkeydown', style: { width: size + 'px' }, css: { invalidSetting: hasError }, attr: { title: errorMessage }">
-    </script>
-
     <script type="text/html" id="stringSettingTemplate">
-        <input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', style: { width: size + 'px' }, css: { invalidSetting: hasError }, attr: { title: errorMessage }">
+        <input type="text" data-bind="value: valueAsString, valueUpdate: 'afterkeydown', style: { width: size + 'px' }, css: { invalidSetting: hasError }, attr: { title: errorMessage }">
     </script>
 
     <script type="text/html" id="optionsSettingTemplate">
@@ -78,6 +74,15 @@
         </div>
         <div class="withEachItem">
             <!-- ko template: { name: 'pipelineTemplate', data: withEachItem } --> <!-- /ko -->
+        </div>
+    </script>
+
+    <script type="text/html" id="substringTemplate">
+        <!-- ko template: { name: 'settingsTemplate' } --> <!-- /ko -->
+        <div class="substring">
+            <div class="left" data-bind="text: left"></div>
+            <div class="mid" data-bind="text: mid"></div>
+            <div class="right" data-bind="text: right"></div>
         </div>
     </script>
 
@@ -122,6 +127,9 @@
         <div class="tree ko-drag-autoscroll" data-bind="template: { name: 'pipelineTemplate', data: pipeline }, click: function() { selected(null); }"></div>
         <!-- ko if: !pipeline() || !pipeline().firstChild() -->
         <div class="examples">
+            <h1>Nimbah</h1>
+            <p>A free, <a href="https://github.com/danielearwicker/nimbah">open source</a> tool for reformatting text</p>
+            <p>Watch the <a href="http://www.youtube.com/watch?v=zg5MKescZ68">introductory video (1 minute)</a></p>
             <p>To get started, drag one of the <span class="paletteItem">operators</span> onto the little arrow
             <img src="img/pipe.png" alt="Pipe"> above to see what effect it has on the input text.</p>
             <p>Or instead choose a starting point...</p>
@@ -137,8 +145,12 @@
         </div>
     </div>
     <div class="status">
+        <span>Layout: </span>
         <img src="img/vertical.png" data-bind="click: function() { layout('vertical'); }, css: { selected: layout() == 'vertical' }">
         <img src="img/horizontal.png" data-bind="click: function() { layout('horizontal'); }, css: { selected: layout() == 'horizontal' }">
+        <a href="http://smellegantcode.wordpress.com/tag/nimbah/">Blog posts about Nimbah</a>
+        <a href="http://www.youtube.com/watch?v=zg5MKescZ68">1 minute intro video</a>
+        <a href="https://github.com/danielearwicker/nimbah">Fork me on github</a>
     </div>
 </body>
 </html>

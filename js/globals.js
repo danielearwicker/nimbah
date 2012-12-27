@@ -344,6 +344,62 @@ var operator = function(saved) {
 
 var settingTypes = {};
 
+settingTypes.string = {
+    init: function(setting) {
+        setting.valueAsString = setting.value;
+    }
+};
+
+settingTypes.any = {
+    init: function(setting) {
+        setting.type = 'string';
+        var invalid;
+        setting.valueAsString = ko.computed({
+            read: function() {
+                if (setting.errorMessage()) {
+                    return invalid;
+                }
+                return JSON.stringify(setting.value());
+            },
+            write: function(val) {
+                try {
+                    setting.value(JSON.parse(val));
+                    setting.errorMessage('');
+                } catch (x) {
+                    invalid = val;
+                    setting.errorMessage(x.message);
+                }
+            }
+        });
+
+    }
+}
+
+settingTypes.number = {
+    init: function(setting) {
+        setting.type = 'string';
+        var invalid;
+        setting.valueAsString = ko.computed({
+            read: function() {
+                if (setting.errorMessage()) {
+                    return invalid;
+                }
+                return setting.value() + '';
+            },
+            write: function(str) {
+                var parsed = parseInt(str, 10);
+                if (isNaN(parsed)) {
+                    setting.errorMessage('Should be a number');
+                    invalid = str;
+                } else {
+                    setting.errorMessage('');
+                    setting.value(parsed);
+                }
+            }
+        });
+    }
+};
+
 settingTypes.js = {
     init: function(setting) {
         setting.type = 'string';
@@ -376,9 +432,6 @@ var makeSettingsModel = function(saved, settings) {
         if (!model[name]) {
             model[name] = ko.observable(name in saved ? saved[name] : settings[name].init);
         }
-
-        var invalid;
-
         setting.name = name;
         setting.type = setting.type || 'any';
         setting.size = setting.size || 100;
@@ -386,23 +439,6 @@ var makeSettingsModel = function(saved, settings) {
         setting.errorMessage = ko.observable('');
         setting.hasError = ko.computed(function() {
             return !!setting.errorMessage();
-        });
-        setting.valueAsJson = ko.computed({
-            read: function() {
-                if (setting.errorMessage()) {
-                    return invalid;
-                }
-                return JSON.stringify(setting.value());
-            },
-            write: function(val) {
-                try {
-                    setting.value(JSON.parse(val));
-                    setting.errorMessage('');
-                } catch (x) {
-                    invalid = val;
-                    setting.errorMessage(x.message);
-                }
-            }
         });
 
         if (settingTypes[setting.type]) {

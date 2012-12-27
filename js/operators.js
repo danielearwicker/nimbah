@@ -85,6 +85,34 @@ operators.trim = function(saved) {
     return model;
 };
 
+operators.skip = function(saved) {
+    var model = makeSettingsModel(saved, {
+        count: { type: 'number', init: 1 }
+    });
+    model.outputValue = ko.computed(function() {
+        var input = model.inputValue();
+        if (Array.isArray(input)) {
+            return input.slice(model.count());
+        }
+        return input;
+    });
+    return model;
+};
+
+operators.take = function(saved) {
+    var model = makeSettingsModel(saved, {
+        count: { type: 'number', init: 1 }
+    });
+    model.outputValue = ko.computed(function() {
+        var input = model.inputValue();
+        if (Array.isArray(input)) {
+            return input.slice(0, model.count());
+        }
+        return input;
+    });
+    return model;
+};
+
 operators.equals = function(saved) {
     var model = makeSettingsModel(saved, {
         value: { init: '', size: 120 }
@@ -125,6 +153,46 @@ operators.reduce = function(saved) {
             }
         } catch(x) {
             return x.message;
+        }
+        return input;
+    });
+    return model;
+};
+
+operators.substring = function(saved) {
+    var settings = {
+        start: { type: 'number', init: 0 },
+        count: { type: 'number', init: 1 }
+    };
+    var model = makeSettingsModel(saved, settings);
+    model.template = 'substring';
+
+    model.left = ko.observable('');
+    model.mid = ko.observable('');
+    model.right = ko.observable('');
+
+    model.outputValue = ko.computed(function() {
+        var input = model.inputValue();
+        if (typeof input == 'string') {
+            var left = input.substr(0, model.start()),
+                mid = input.substr(model.start(), model.count()),
+                right = input.substr(model.start() + model.count()),
+                result = mid;
+            var ellipsis = '...';
+            var max = 20;
+            if (left.length > (max + ellipsis.length)) {
+                left = ellipsis + left.substr(-max);
+            }
+            if (right.length > (max + ellipsis.length)) {
+                right = right.substr(0, max) + ellipsis;
+            }
+            if (mid.length > (max + ellipsis.length)) {
+                mid = mid.substr(0, max/2) + ellipsis + mid.substr(-max/2);
+            }
+            model.left(left);
+            model.mid(mid);
+            model.right(right);
+            return result;
         }
         return input;
     });
