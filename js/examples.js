@@ -79,7 +79,11 @@ var examples = [
                         {"name":"sequence","items":
                             [
                                 [{"name":"constant","value":"public const string "}],
-                                [{"name":"js","expression":"context.charAt(0).toUpperCase() + context.substr(1)"}],
+                                [
+                                    {"name":"substring","start":0,"count":1},
+                                    {"name":"js","expression":"context.toUpperCase()"}
+                                ],
+                                [{"name":"substring","start":1,"count":1000}],
                                 [{"name":"constant","value":" = \""}],
                                 [],
                                 [{"name":"constant","value":"\";"}]
