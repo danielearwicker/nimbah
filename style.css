@@ -374,6 +374,10 @@ textarea {
     border-right: 1px solid gray;
 }
 
+.numberSetting {
+    white-space: nowrap;
+}
+
 .numberSetting > * {
     vertical-align: middle;
 }
