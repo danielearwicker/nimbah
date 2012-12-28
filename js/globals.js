@@ -357,12 +357,21 @@ settingTypes.any = {
         });
 
     }
-}
+};
 
 settingTypes.number = {
     init: function(setting) {
-        setting.type = 'string';
         var invalid;
+
+        setting.decrement = function() {
+            setting.value(setting.value() - 1);
+        };
+        setting.canDecrement = true;
+        setting.increment = function() {
+            setting.value(setting.value() + 1);
+        };
+        setting.canIncrement = true;
+
         setting.valueAsString = ko.computed({
             read: function() {
                 if (setting.errorMessage()) {
@@ -448,8 +457,21 @@ var dataNavigator = function(saved) {
     model.withEachItem = pipeline(saved.withEachItem);
     model.withEachItem.parent(model);
     model.position = ko.observable(0);
-    model.displayPosition = ko.computed(function() {
-        return model.position() + 1;
+
+    var invalid = null;
+    model.displayPosition = ko.computed({
+        read: function() {
+            return invalid !== null ? invalid : model.position() + 1;
+        },
+        write: function(pos) {
+            var num = parseInt(pos, 10);
+            if (isNaN(num) || (num - 1) >= model.length() || num < 1) {
+                invalid = pos;
+            } else {
+                invalid = null;
+                model.position(num - 1);
+            }
+        }
     });
 
     model.inputArray = ko.computed(function() {
@@ -477,6 +499,10 @@ var dataNavigator = function(saved) {
     model.hasNext = ko.computed(function() {
         return model.position() < (model.length() - 1);
     });
+    model.first = function(obj, ev) {
+        ev.cancelBubble = true;
+        model.position(0);
+    };
     model.previous = function(obj, ev) {
         ev.cancelBubble = true;
         if (model.hasPrevious()) {
@@ -487,6 +513,12 @@ var dataNavigator = function(saved) {
         ev.cancelBubble = true;
         if (model.hasNext()) {
             model.position(model.position() + 1);
+        }
+    };
+    model.last = function(obj, ev) {
+        ev.cancelBubble = true;
+        if (model.length()) {
+            model.position(model.length() - 1);
         }
     };
 

@@ -62,15 +62,25 @@
         <input type="text" data-bind="value: valueAsString, valueUpdate: 'afterkeydown', style: { width: size + 'px' }, css: { invalidSetting: hasError }, attr: { title: errorMessage }">
     </script>
 
+    <script type="text/html" id="numberSettingTemplate">
+        <div class="numberSetting">
+        <button data-bind="click: decrement, enable: canDecrement">-</button>
+        <!-- ko template: { name: 'stringSettingTemplate' } --> <!-- /ko -->
+        <button data-bind="click: increment, enable: canIncrement">+</button>
+        </div>
+    </script>
+
     <script type="text/html" id="optionsSettingTemplate">
         <select data-bind="options: options, value: value"></select>
     </script>
 
     <script type="text/html" id="dataNavigatorTemplate">
         <div class="dataNavigator">
-            <button data-bind="click: previous, enable: hasPrevious">&lt;</button>
-            <span data-bind="text: displayPosition"></span> of <span data-bind="text: length"></span>
-            <button data-bind="click: next, enable: hasNext">&gt;</button>
+            <button data-bind="click: first, enable: hasPrevious"><img src="img/first.png"></button>
+            <button data-bind="click: previous, enable: hasPrevious"><img src="img/previous.png"></button>
+            <input type="text" data-bind="value: displayPosition, valueUpdate: 'afterkeydown'"><span> of </span><span data-bind="text: length"></span>
+            <button data-bind="click: next, enable: hasNext"><img src="img/next.png"></button>
+            <button data-bind="click: last, enable: hasNext"><img src="img/last.png"></button>
         </div>
         <div class="withEachItem">
             <!-- ko template: { name: 'pipelineTemplate', data: withEachItem } --> <!-- /ko -->

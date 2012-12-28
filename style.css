@@ -253,6 +253,18 @@ textarea {
     border-bottom: 1px solid gray;
 }
 
+.dataNavigator > * {
+    vertical-align: middle;
+}
+
+.dataNavigator > button img {
+    vertical-align: middle;
+}
+
+.dataNavigator > input {
+    width: 30px;
+}
+
 .sequence {
     margin: 4px;
     min-height: 100px;
@@ -360,4 +372,12 @@ textarea {
     background: white;
     border-left: 1px solid gray;
     border-right: 1px solid gray;
+}
+
+.numberSetting > * {
+    vertical-align: middle;
+}
+
+.numberSetting button {
+    width: 24px;
 }
