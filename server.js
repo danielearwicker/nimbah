@@ -11,7 +11,7 @@ app.get('/hellojoe', function(req, res){
         if(!err) {
             res.send("We are connected");
         } else {
-            res.send(err.toString());
+            res.send('Got an error[1] - ' + err.toString());
         }
      });
 });
