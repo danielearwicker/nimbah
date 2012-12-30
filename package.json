@@ -1,0 +1,14 @@
+{
+  "name": "nimbah",
+  "subdomain": "danielearwicker.nimbah",
+  "scripts": {
+    "start": "server.js"
+  },
+  "version": "0.0.0",
+  "engines": {
+    "node": "0.8.x"
+  },
+  "dependencies": {
+    "express": "3.x"
+  }
+}
