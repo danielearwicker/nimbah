@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var mongo = require('mongodb').MongoClient;
-
+var connect = require('connect');
 var janrain = require('janrain-api'),
     engageAPI = janrain('386e29baf51cc7eb88fe3da89ea2f514a4c9ac9a');
 
@@ -21,14 +21,14 @@ app.get('/hellojoe', function(req, res){
      });
 });
 
-app.get('/token/:token', function(req, res) {
-
-    if (!req.params.token) {
-        res.send('No token');
+app.post('/token', connect.bodyDecoder(), function(req, res){
+    var token = req.body.token;
+    if(!token || token.length != 40 ) {
+        res.send('Bad Token!');
         return;
     }
 
-    engageAPI.authInfo(req.params.token, true, function(err, data) {
+    engageAPI.authInfo(token, true, function(err, data) {
         if (err) {
             console.log('ERROR: ' + err.message);
             return;
@@ -36,6 +36,7 @@ app.get('/token/:token', function(req, res) {
 
         req.redirect(homepage + '#login:' + data.profile.identifier);
     });
+
 });
 
 app.listen(process.env.PORT || 1337);
