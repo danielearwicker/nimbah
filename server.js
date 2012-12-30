@@ -23,7 +23,7 @@ app.get('/hellojoe', function(req, res){
 
 app.get('/token/:token', function(req, res) {
 
-    if (req.params.token) {
+    if (!req.params.token) {
         res.send('No token');
         return;
     }
