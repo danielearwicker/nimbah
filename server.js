@@ -9,9 +9,9 @@ var connectionString = 'mongodb://nodejitsu:322270e3d4b21555bb6253d3233e5923@lin
 app.get('/hellojoe', function(req, res){
     mongo.connect(connectionString, function(err, db) {
         if(!err) {
-            res.send("We are connected");
+            res.send("Still we are connected");
         } else {
-            res.send('Got an error[1] - ' + err.toString());
+            res.send('Got an error[2] - ' + err.toString());
         }
      });
 });
