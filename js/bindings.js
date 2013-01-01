@@ -1,4 +1,48 @@
 
+var localStorageObservable = function(name) {
+    return ko.computed({
+        read: function() {
+            return localStorage.getItem(name);
+        },
+        write: function(val) {
+            localStorage.setItem(name, val);
+        }
+    });
+};
+
+ko.extenders.async = function(computedDeferred, initialValue) {
+
+    var plainObservable = ko.observable(initialValue), currentDeferred;
+    plainObservable.inProgress = ko.observable(false);
+
+    ko.computed(function() {
+        if (currentDeferred) {
+            currentDeferred.reject();
+            currentDeferred = null;
+        }
+
+        var newDeferred = computedDeferred();
+        if (newDeferred &&
+            (typeof newDeferred.done == "function")) {
+
+            // It's a deferred
+            plainObservable.inProgress(true);
+
+            // Create our own wrapper so we can reject
+            currentDeferred = $.Deferred().done(function(data) {
+                plainObservable.inProgress(false);
+                plainObservable(data);
+            });
+            newDeferred.done(currentDeferred.resolve);
+        } else {
+            // A real value, so just publish it immediately
+            plainObservable(newDeferred);
+        }
+    });
+
+    return plainObservable;
+};
+
 ko.bindingHandlers.fadeVisible = {
     init: function(element, valueAccessor) {
         // Initially set the element to be instantly visible/hidden depending on the value
@@ -114,6 +158,17 @@ ko.bindingHandlers.drop = {
             drop: function(evt, ui) {
                 value(context, ui.helper.data('ko.draggable.data'));
             }
+        });
+    }
+};
+
+ko.bindingHandlers.autocomplete = {
+    /*init: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
+
+    },*/
+    update: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
+        $(element).autocomplete({
+            source: ko.utils.unwrapObservable(valueAccessor()) || []
         });
     }
 };

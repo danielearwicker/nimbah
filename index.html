@@ -106,6 +106,7 @@
         </div>
     </script>
 
+
 </head>
 <body>
     <div class="app" data-bind="css: { horizontal: layout() == 'horizontal', vertical: layout() == 'vertical' }">
@@ -128,8 +129,17 @@
             <!-- /ko -->
         </div>
         <div class="commands">
-            <div data-bind="foreach: commands">
-                <button data-bind="text: name, click: execute, enable: enabled"></button>
+            <div>
+                <div class="userInfo" data-bind="if: currentUserInfo()">
+                    <div>
+                        <a data-bind="attr: { href: currentUserInfo().url }">
+                            <img data-bind="attr: { src: currentUserInfo().photo, title: currentUserInfo().displayName }">
+                        </a>
+                    </div>
+                </div>
+                <div data-bind="foreach: commands">
+                    <button data-bind="text: name, click: execute, enable: enabled"></button>
+                </div>
             </div>
         </div>
         <div class="tree ko-drag-autoscroll" data-bind="template: { name: 'pipelineTemplate', data: pipeline }, click: function() { selected(null); }"></div>
@@ -159,6 +169,7 @@
         <a href="http://smellegantcode.wordpress.com/tag/nimbah/">Blog posts about Nimbah</a>
         <a href="http://www.youtube.com/watch?v=zg5MKescZ68">1 minute intro video</a>
         <a href="https://github.com/danielearwicker/nimbah">Fork me on github</a>
+        <span data-bind="text: saveName"></span>
     </div>
 </body>
 </html>

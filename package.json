@@ -4,13 +4,14 @@
   "scripts": {
     "start": "server.js"
   },
-  "version": "0.0.0",
+  "version": "0.0.0-21",
   "engines": {
     "node": "0.8.x"
   },
   "dependencies": {
     "express": "3.x",
-    "mongodb": "1.2.x",
-    "janrain-api": "x.x.x"
+    "connect": "2.7.x",
+    "janrain-api": "x.x.x",
+    "nano": "3.3.x"
   }
 }

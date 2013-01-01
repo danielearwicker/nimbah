@@ -340,6 +340,15 @@ textarea {
     bottom: 4px;
 }
 
+.commands .userInfo {
+    width: 100%;
+    text-align: center;
+}
+
+.commands .userInfo img {
+    text-align: center;
+}
+
 .commands button {
     width: 100%;
 }
@@ -361,6 +370,7 @@ textarea {
     text-align: left;
     background: silver;
 }
+
 .substring > div {
     display: inline-block;
     background: silver;
@@ -384,4 +394,9 @@ textarea {
 
 .numberSetting button {
     width: 24px;
+}
+
+.userPic {
+    width: 64px;
+    height: 64px;
 }

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirect</title>
+    <script>
+        if (parent.viewModel.logonDialog()) {
+            parent.viewModel.logonDialog().finish(location.hash.substr(1));
+        }
+    </script>
+</head>
+<body>
+</body>
+</html>

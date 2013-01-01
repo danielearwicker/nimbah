@@ -1,3 +1,5 @@
+
+
 var viewModel = {
     inputText: ko.observable(localStorage.getItem('savedInputText') || ''),
     inputFocused: ko.observable(false),
@@ -9,7 +11,10 @@ var viewModel = {
     },
     pipeline: ko.observable(null),
     layout: ko.observable('vertical'),
-    examples: examples
+    examples: examples,
+    currentUserId: localStorageObservable('currentUserId'),
+    logonDialog: ko.observable(null),
+    saveName: ko.observable('')
 };
 
 viewModel.pipeline.subscribe(function() {

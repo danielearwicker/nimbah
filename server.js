@@ -1,30 +1,76 @@
 var express = require('express');
-var app = express();
-var mongo = require('mongodb').MongoClient;
 var connect = require('connect');
-var janrain = require('janrain-api'),
-    engageAPI = janrain('386e29baf51cc7eb88fe3da89ea2f514a4c9ac9a');
+
+var nano = require('nano')(process.env.NIMBAH_COUCHDB).use('nimbah');
+
+var janrain = require('janrain-api');
+var engageAPI = janrain('386e29baf51cc7eb88fe3da89ea2f514a4c9ac9a');
 
 var homepage = process.env.NIMBAH_HOMEPAGE || 'http://127.0.0.1';
 
+var app = express();
 app.use(express.static(__dirname));
+app.use(express.json());
 
-var connectionString = 'mongodb://nodejitsu:322270e3d4b21555bb6253d3233e5923@linus.mongohq.com:10069/nodejitsudb8668093658';
+var flatten = function(str) {
+    str = str.toLowerCase();
 
-app.get('/hellojoe', function(req, res){
-    mongo.connect(connectionString, function(err, db) {
-        if(!err) {
-            res.send("Still we are connected");
+    var pattern = /^[_\-\.a-zA-Y0-9]$/;
+
+    var parts = [];
+    for (var c = 0; c < str.length; c++) {
+        var ch = str.charAt(c);
+        if (ch.match(pattern)) {
+            parts.push(ch);
         } else {
-            res.send('Got an error[2] - ' + err.toString());
+            parts.push('Z' + str.charCodeAt(c) + 'Z');
         }
-     });
+    }
+
+    return parts.join('');
+};
+
+app.get('/config', function(req, res) {
+    res.send({
+        live: !!process.env.NIMBAH_HOMEPAGE
+    });
 });
 
-app.post('/token', connect.bodyDecoder(), function(req, res){
+app.get('/users/:userId', function(req, res) {
+    nano.get(req.params.userId, { revs_info: false }, function(err, user) {
+        if (err) {
+            res.send(404);
+        } else {
+            if (!user.photo) {
+                user.photo = 'img/nimbah64.png';
+            }
+            res.send(user);
+        }
+    });
+});
+
+app.post('/users/:userId/saved/:name', function(req, res) {
+    var path = req.params.userId + '/' + req.params.name;
+    nano.get(path, { revs_info: true }, function(err, saved) {
+        if (err) {
+            saved = {};
+        }
+        saved.pipeline = req.body;
+        nano.insert(saved, path, function(err, result) {
+            if (err) {
+                console.log(err.toString());
+                res.send(err);
+            } else {
+                res.send({});
+            }
+        });
+    });
+});
+
+app.post('/token', connect.bodyParser(), function(req, res){
     var token = req.body.token;
     if(!token || token.length != 40 ) {
-        res.send('Bad Token!');
+        console.log('Token looks bad: ' + token);
         return;
     }
 
@@ -34,7 +80,23 @@ app.post('/token', connect.bodyDecoder(), function(req, res){
             return;
         }
 
-        req.redirect(homepage + '#login:' + data.profile.identifier);
+        var id = flatten(data.profile.identifier);
+
+        nano.get(id, { revs_info: true }, function(err, user) {
+            if (err) {
+                user = {};
+            }
+            user.identifier = data.profile.identifier;
+            user.providerName = data.profile.providerName;
+            user.email = data.profile.email;
+            user.url = data.profile.url;
+            user.photo = data.profile.photo;
+            user.displayName = data.profile.displayName;
+
+            nano.insert(user, id, function(err, result) {
+                res.redirect(homepage + '/redirect.html#' + id);
+            });
+        });
     });
 
 });
